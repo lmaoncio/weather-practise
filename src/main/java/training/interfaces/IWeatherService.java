@@ -12,6 +12,4 @@ public interface IWeatherService {
 	
 	JSONArray getCityDataByCityID(String cityID);
 	
-	String extractCityStatusFromCityData(JSONArray cityData, Date dateTime);
-	
 }
