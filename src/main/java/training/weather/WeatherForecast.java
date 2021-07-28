@@ -29,8 +29,15 @@ public class WeatherForecast implements IWeatherService {
 
 	private HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
 
+	/**
+	* Returns city weather status by date and name of https://www.metaweather.com/api/
+	* @param  cityName city of an available city
+	* @param  dateTime available date of API
+	* @return the forecast that day in that city
+	*/
+	
 	@Override
-	public String getCityWeatherByName(String city, Instant dateTime) {
+	public String getCityWeatherByName(String cityName, Instant dateTime) {
 		String cityStatus = null;
 
 		Instant limitDate = Instant.now().plus(LIMIT_DATE, ChronoUnit.DAYS);
@@ -39,7 +46,7 @@ public class WeatherForecast implements IWeatherService {
 			dateTime = Instant.now();
 		}
 		if (dateTime.isBefore(limitDate)) {
-			String cityID = getCityIDByName(city);
+			String cityID = getCityIDByName(cityName);
 			JSONArray cityData = getCityDataByCityID(cityID);
 
 			cityStatus = extractCityStatusFromCityData(cityData, dateTime);
@@ -50,6 +57,11 @@ public class WeatherForecast implements IWeatherService {
 		
 	}
 
+	/**
+	* gets the cityID from the IP searching by the name
+	* @param  cityName city of an available city
+	* @return the ID of the city
+	*/
 	@Override
 	public String getCityIDByName(String cityName) {
 		String cityID = null;
@@ -68,6 +80,11 @@ public class WeatherForecast implements IWeatherService {
 		return cityID;
 	}
 
+	/**
+	* gets the city weather data by the city ID in the API
+	* @param  cityID city ID of the city in the API
+	* @return A JSONArray with all the data of that city that date
+	*/
 	@Override
 	public JSONArray getCityDataByCityID(String cityID) {
 		String cityData = null;
@@ -84,12 +101,20 @@ public class WeatherForecast implements IWeatherService {
 		return cityDataArray;
 	}
 
+	/**
+	* extracts the weather status and returns the response to the client
+	* @param  cityData a JSONArray with all the data of that city that date
+	* @param  dateTime date to query
+	* @return returns the city status
+	*/
 	@SuppressWarnings("unchecked")
 	private String extractCityStatusFromCityData(JSONArray cityData, Instant dateTime) {
 	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault());
 
 	    String formatedDate = dateFormatter.format(new Date().toInstant());
 
+	    // I've changed the way the program iterates the list 
+	    // Now it's an Stream who filters by a condition. Then casts the response and looks for the key value status
 	    return cityData.toList().stream().filter(data -> {			
 			return formatedDate
 					.equals(((Map<String, String>)data).get(JSON_APPLICABLE_DATE_NODE));
@@ -101,6 +126,13 @@ public class WeatherForecast implements IWeatherService {
 		}).findAny().orElse(null).toString();
 	}
 
+	/**
+	* builds requests and parses responses
+	* @param  requestFactory the request factory
+	* @param  URL requested API URL
+	* @param  data the short-link to request methods at the API
+	* @return returns a data response
+	*/
 	private String executeRequest(HttpRequestFactory requestFactory, String URL, String data) {
 		HttpRequest request = null;
 		String result = null;
