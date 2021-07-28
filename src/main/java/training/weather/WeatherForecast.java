@@ -6,14 +6,13 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import training.interfaces.IWeatherService;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Locale;
+import java.util.Map;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,6 +43,8 @@ public class WeatherForecast implements IWeatherService {
 			JSONArray cityData = getCityDataByCityID(cityID);
 
 			cityStatus = extractCityStatusFromCityData(cityData, dateTime);
+			
+			System.out.println(cityStatus);
 		}
 		return cityStatus;
 		
@@ -83,21 +84,21 @@ public class WeatherForecast implements IWeatherService {
 		return cityDataArray;
 	}
 
+	@SuppressWarnings("unchecked")
 	private String extractCityStatusFromCityData(JSONArray cityData, Instant dateTime) {
-		String result = null;
-		
 	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault());
 
 	    String formatedDate = dateFormatter.format(new Date().toInstant());
-		
-		
-		for (int i = 0; i < cityData.length(); i++) {
-			if (formatedDate.equals(cityData.getJSONObject(i).get(JSON_APPLICABLE_DATE_NODE).toString())) {
-				result = cityData.getJSONObject(i).get(JSON_WEATHER_STATE_NODE).toString();
-			}
-		}
-		
-		return result;
+
+	    return cityData.toList().stream().filter(data -> {			
+			return formatedDate
+					.equals(((Map<String, String>)data).get(JSON_APPLICABLE_DATE_NODE));
+		}).map(map -> { 
+			Map<String,String> castedMap = (Map<String,String>) map;
+			
+			String weatherStatus = castedMap.get(JSON_WEATHER_STATE_NODE);
+			return weatherStatus;
+		}).findAny().orElse(null).toString();
 	}
 
 	private String executeRequest(HttpRequestFactory requestFactory, String URL, String data) {
