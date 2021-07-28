@@ -9,8 +9,8 @@ public class WeatherForecastTest {
 	@Test
 	public void getCityWeatherByName_NotNull_ShouldPass() {
 		WeatherForecast weatherForecast = new WeatherForecast();
-		String WeatherStatus = weatherForecast.getCityWeatherByName("Barcelona", Instant.now());
-		Assert.assertNotNull("CITY STATUS IS NULL", WeatherStatus);
+		String weatherStatus = weatherForecast.getCityWeatherByName("Barcelona", Instant.now());
+		Assert.assertNotNull("CITY STATUS IS NULL", weatherStatus);
 	}
 	
 	@Test
