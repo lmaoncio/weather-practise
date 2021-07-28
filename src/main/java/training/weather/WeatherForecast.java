@@ -7,13 +7,20 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import training.interfaces.IWeatherService;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Locale;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class WeatherForecast implements IWeatherService {
 	public static final String DATE_FORMAT = "yyyy-MM-dd";
-	public static final Date DATE_RANGE = new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 6));
+	public static final Long LIMIT_DATE = 7L;
 	public static final String REQUEST_CITY_ID_URL = "https://www.metaweather.com/api/location/search/?query=";
 	public static final String REQUEST_CITY_WEATHER_URL = "https://www.metaweather.com/api/location/";
 	public static final String JSON_WEATHER_NODE = "consolidated_weather";
@@ -24,19 +31,22 @@ public class WeatherForecast implements IWeatherService {
 	private HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
 
 	@Override
-	public String getCityWeatherByName(String city, Date dateTime) {
+	public String getCityWeatherByName(String city, Instant dateTime) {
 		String cityStatus = null;
 
+		Instant limitDate = Instant.now().plus(LIMIT_DATE, ChronoUnit.DAYS);
+		
 		if (dateTime == null) {
-			dateTime = new Date();
+			dateTime = Instant.now();
 		}
-		if (dateTime.before(DATE_RANGE)) {
+		if (dateTime.isBefore(limitDate)) {
 			String cityID = getCityIDByName(city);
 			JSONArray cityData = getCityDataByCityID(cityID);
 
 			cityStatus = extractCityStatusFromCityData(cityData, dateTime);
 		}
 		return cityStatus;
+		
 	}
 
 	@Override
@@ -73,12 +83,16 @@ public class WeatherForecast implements IWeatherService {
 		return cityDataArray;
 	}
 
-	private String extractCityStatusFromCityData(JSONArray cityData, Date dateTime) {
+	private String extractCityStatusFromCityData(JSONArray cityData, Instant dateTime) {
 		String result = null;
+		
+	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault());
 
+	    String formatedDate = dateFormatter.format(new Date().toInstant());
+		
+		
 		for (int i = 0; i < cityData.length(); i++) {
-			if (new SimpleDateFormat(DATE_FORMAT).format(dateTime)
-					.equals(cityData.getJSONObject(i).get(JSON_APPLICABLE_DATE_NODE).toString())) {
+			if (formatedDate.equals(cityData.getJSONObject(i).get(JSON_APPLICABLE_DATE_NODE).toString())) {
 				result = cityData.getJSONObject(i).get(JSON_WEATHER_STATE_NODE).toString();
 			}
 		}

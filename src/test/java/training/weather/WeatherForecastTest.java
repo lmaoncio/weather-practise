@@ -1,8 +1,6 @@
 package training.weather;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
 import org.json.JSONArray;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,7 +9,7 @@ public class WeatherForecastTest {
 	@Test
 	public void getCityWeatherByName_NotNull_ShouldPass() {
 		WeatherForecast weatherForecast = new WeatherForecast();
-		String WeatherStatus = weatherForecast.getCityWeatherByName("Barcelona", new Date());
+		String WeatherStatus = weatherForecast.getCityWeatherByName("Barcelona", Instant.now());
 		Assert.assertNotNull("CITY STATUS IS NULL", WeatherStatus);
 	}
 	
@@ -19,13 +17,8 @@ public class WeatherForecastTest {
 	public void getCityWeatherByName_NotInRangeDate_ShouldFail() {
 		WeatherForecast weatherForecast = new WeatherForecast();
 		
-		
-		Date myDate = null;
-		try {
-			myDate = new SimpleDateFormat("yyyy-MM-dd").parse("2025-12-12");
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+        Instant myDate = Instant.parse("2025-12-12T10:15:30.00Z");
+
 		String WeatherStatus = weatherForecast.getCityWeatherByName("Barcelona", myDate);
 		Assert.assertNotNull("DATE NOT IN RANGE", WeatherStatus);
 	}
